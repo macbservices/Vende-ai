@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+    <string name="firestore_database_id" translatable="false">ai-studio-android-vendeias-eb1b6eb8-dc7d-4f75-acd7-726ebaf75ad9</string>
+    <string name="recaptcha_site_key" translatable="false">6LdxpA0uAAAAAPtRgxK4lb1rf1OsV-M6tpQabukL</string>
+</resources>

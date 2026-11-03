@@ -1,0 +1,165 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile with plan, role and organization mapping",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Authenticated user UID" },
+        "email": { "type": "string", "description": "User email address" },
+        "displayName": { "type": "string", "description": "Full name or brand" },
+        "role": { "type": "string", "description": "User role: admin, creator, or member" },
+        "planId": { "type": "string", "description": "Subscription tier: free, basic, pro, or enterprise" },
+        "organizationId": { "type": "string", "description": "Tenant organization ID" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["userId", "email", "displayName", "role", "planId", "createdAt"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Infoproduct definition (e-book, course, guide)",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "title": { "type": "string", "description": "Product title" },
+        "subtitle": { "type": "string", "description": "Product subtitle or promise" },
+        "niche": { "type": "string", "description": "Target niche or industry" },
+        "targetAudience": { "type": "string", "description": "Audience description" },
+        "tone": { "type": "string", "description": "Writing tone" },
+        "status": { "type": "string", "description": "Product status: draft, generating, ready, published" },
+        "chapterCount": { "type": "integer", "description": "Total chapters planned" },
+        "price": { "type": "number", "description": "Selling price in BRL" },
+        "currency": { "type": "string", "description": "Currency code" },
+        "coverImageUrl": { "type": "string", "description": "Generated or uploaded cover image URL" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["userId", "title", "niche", "status", "chapterCount", "price", "createdAt"]
+    },
+    "Chapter": {
+      "title": "Chapter",
+      "description": "Individual chapter of an infoproduct",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "description": "Parent product ID" },
+        "userId": { "type": "string", "description": "Owner UID" },
+        "title": { "type": "string", "description": "Chapter title" },
+        "sequence": { "type": "integer", "description": "Ordering sequence index" },
+        "content": { "type": "string", "description": "Full chapter Markdown/text content" },
+        "wordCount": { "type": "integer", "description": "Approximate word count" },
+        "status": { "type": "string", "description": "Status: pending, generating, completed, error" },
+        "isReviewed": { "type": "boolean", "description": "Whether chapter has editorial review" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["productId", "userId", "title", "sequence", "status", "createdAt"]
+    },
+    "LandingPage": {
+      "title": "LandingPage",
+      "description": "Commercial sales page configuration for a product",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "description": "Referenced product ID" },
+        "userId": { "type": "string", "description": "Owner UID" },
+        "title": { "type": "string", "description": "Page internal title" },
+        "headline": { "type": "string", "description": "Persuasive headline" },
+        "subheadline": { "type": "string", "description": "Subheadline" },
+        "benefits": { "type": "string", "description": "Serialized or bullet list of benefits" },
+        "guarantee": { "type": "string", "description": "Guarantee policy description" },
+        "bonus": { "type": "string", "description": "Special bonus material descriptions" },
+        "theme": { "type": "string", "description": "Page visual theme" },
+        "status": { "type": "string", "description": "draft or published" },
+        "publicSlug": { "type": "string", "description": "URL slug for sharing" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["productId", "userId", "title", "headline", "status", "createdAt"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer purchase transaction record",
+      "type": "object",
+      "properties": {
+        "productId": { "type": "string", "description": "Purchased product ID" },
+        "userId": { "type": "string", "description": "Seller owner UID" },
+        "customerName": { "type": "string", "description": "Buyer full name" },
+        "customerEmail": { "type": "string", "description": "Buyer email for delivery" },
+        "customerPhone": { "type": "string", "description": "Buyer phone number" },
+        "amount": { "type": "number", "description": "Final paid amount" },
+        "status": { "type": "string", "description": "pending, paid, cancelled, or refunded" },
+        "paymentMethod": { "type": "string", "description": "pix, credit_card, or boleto" },
+        "pixCode": { "type": "string", "description": "Pix EMV copy-paste string" },
+        "isDelivered": { "type": "boolean", "description": "Whether infoproduct delivery has completed" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["productId", "userId", "customerName", "customerEmail", "amount", "status", "createdAt"]
+    },
+    "Lead": {
+      "title": "Lead",
+      "description": "CRM lead contact record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Owner UID" },
+        "name": { "type": "string", "description": "Lead full name" },
+        "email": { "type": "string", "description": "Lead email address" },
+        "phone": { "type": "string", "description": "Lead phone / WhatsApp number" },
+        "stage": { "type": "string", "description": "Funnel stage: new, contacted, negotiating, interested, converted, lost" },
+        "origin": { "type": "string", "description": "Lead origin (e.g. Instagram, Landing Page, WhatsApp)" },
+        "tags": { "type": "string", "description": "Comma-separated classification tags" },
+        "notes": { "type": "string", "description": "CRM follow-up notes" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["userId", "name", "email", "stage", "createdAt"]
+    },
+    "AiJob": {
+      "title": "AiJob",
+      "description": "Background generation job tracking",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Initiator UID" },
+        "productId": { "type": "string", "description": "Related product ID" },
+        "type": { "type": "string", "description": "Job type: outline, chapter, sales_page, campaign, creatives" },
+        "status": { "type": "string", "description": "pending, running, completed, failed" },
+        "progress": { "type": "integer", "description": "Percentage 0 to 100" },
+        "currentStep": { "type": "string", "description": "Status summary of current step" },
+        "resultSummary": { "type": "string", "description": "Completion output summary or error detail" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Server timestamp of creation" },
+        "updatedAt": { "type": "string", "format": "date-time", "description": "Server timestamp of last update" }
+      },
+      "required": ["userId", "type", "status", "progress", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles partitioned by UID"
+    },
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Products owned by users"
+    },
+    "/products/{productId}/chapters/{chapterId}": {
+      "schema": "Chapter",
+      "description": "Subcollection of chapters for each product"
+    },
+    "/landingPages/{pageId}": {
+      "schema": "LandingPage",
+      "description": "Sales pages configured for products"
+    },
+    "/orders/{orderId}": {
+      "schema": "Order",
+      "description": "Customer orders and payment records"
+    },
+    "/leads/{leadId}": {
+      "schema": "Lead",
+      "description": "CRM prospective buyers and contacts"
+    },
+    "/aiJobs/{jobId}": {
+      "schema": "AiJob",
+      "description": "Persistent asynchronous AI task tracking"
+    }
+  }
+}

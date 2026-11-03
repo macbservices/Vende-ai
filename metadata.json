@@ -1,0 +1,6 @@
+{
+  "name": "VendeIA SaaS",
+  "description": "Plataforma completa para criação, diagramação, publicação e venda de infoprodutos digitais com inteligência artificial Gemini.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

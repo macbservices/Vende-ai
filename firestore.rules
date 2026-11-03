@@ -1,0 +1,205 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidUserProfile(data) {
+      return data.userId is string && data.userId.size() > 0 &&
+             data.email is string && data.email.size() <= 200 &&
+             data.displayName is string && data.displayName.size() <= 100 &&
+             data.role in ['admin', 'creator', 'member'] &&
+             data.planId in ['free', 'basic', 'pro', 'enterprise'];
+    }
+
+    function isValidProduct(data) {
+      return data.userId is string && data.userId.size() > 0 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.niche is string && data.niche.size() <= 100 &&
+             data.status in ['draft', 'generating', 'ready', 'published'] &&
+             data.chapterCount is int && data.chapterCount >= 1 && data.chapterCount <= 50 &&
+             data.price is number && data.price >= 0.0;
+    }
+
+    function isValidChapter(data) {
+      return data.productId is string && data.productId.size() > 0 &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.sequence is int && data.sequence >= 0 &&
+             data.status in ['pending', 'generating', 'completed', 'error'];
+    }
+
+    function isValidLandingPage(data) {
+      return data.productId is string && data.productId.size() > 0 &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 200 &&
+             data.headline is string && data.headline.size() <= 300 &&
+             data.status in ['draft', 'published'];
+    }
+
+    function isValidOrder(data) {
+      return data.productId is string && data.productId.size() > 0 &&
+             data.userId is string && data.userId.size() > 0 &&
+             data.customerName is string && data.customerName.size() > 0 && data.customerName.size() <= 150 &&
+             data.customerEmail is string && data.customerEmail.size() > 0 && data.customerEmail.size() <= 200 &&
+             data.amount is number && data.amount >= 0.0 &&
+             data.status in ['pending', 'paid', 'cancelled', 'refunded'];
+    }
+
+    function isValidLead(data) {
+      return data.userId is string && data.userId.size() > 0 &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 150 &&
+             data.email is string && data.email.size() > 0 && data.email.size() <= 200 &&
+             data.stage in ['new', 'contacted', 'negotiating', 'interested', 'converted', 'lost'];
+    }
+
+    function isValidAiJob(data) {
+      return data.userId is string && data.userId.size() > 0 &&
+             data.type in ['outline', 'chapter', 'sales_page', 'campaign', 'creatives', 'full_ebook'] &&
+             data.status in ['pending', 'running', 'completed', 'failed'] &&
+             data.progress is int && data.progress >= 0 && data.progress <= 100;
+    }
+
+    // USERS COLLECTION
+    match /users/{userId} {
+      allow get: if isSignedIn() && request.auth.uid == userId;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidUserProfile(incoming());
+      allow update: if isSignedIn() &&
+                       request.auth.uid == userId &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidUserProfile(incoming());
+      allow delete: if false;
+    }
+
+    // PRODUCTS COLLECTION
+    match /products/{productId} {
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || resource.data.status == 'published');
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidProduct(incoming());
+      allow update: if isSignedIn() &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidProduct(incoming());
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+
+      // CHAPTERS SUBCOLLECTION
+      match /chapters/{chapterId} {
+        allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow create: if isSignedIn() &&
+                         incoming().userId == request.auth.uid &&
+                         incoming().productId == productId &&
+                         incoming().createdAt is timestamp &&
+                         incoming().createdAt <= request.time &&
+                         isValidChapter(incoming());
+        allow update: if isSignedIn() &&
+                         existing().userId == request.auth.uid &&
+                         incoming().userId == existing().userId &&
+                         incoming().productId == existing().productId &&
+                         incoming().createdAt == existing().createdAt &&
+                         isValidChapter(incoming());
+        allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+      }
+    }
+
+    // LANDING PAGES
+    match /landingPages/{pageId} {
+      // Allow public get if page is published, otherwise restricted to owner
+      allow get: if (resource.data.status == 'published') ||
+                    (isSignedIn() && resource.data.userId == request.auth.uid);
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidLandingPage(incoming());
+      allow update: if isSignedIn() &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidLandingPage(incoming());
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // ORDERS
+    match /orders/{orderId} {
+      // Buyers can create orders during checkout; sellers can view and manage
+      allow create: if (incoming().amount >= 0.0) &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidOrder(incoming());
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidOrder(incoming());
+      allow delete: if false;
+    }
+
+    // LEADS (CRM)
+    match /leads/{leadId} {
+      // Creation allowed from landing page forms or authenticated creator
+      allow create: if incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidLead(incoming());
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidLead(incoming());
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+
+    // AI JOBS
+    match /aiJobs/{jobId} {
+      allow get: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+      allow create: if isSignedIn() &&
+                       incoming().userId == request.auth.uid &&
+                       incoming().createdAt is timestamp &&
+                       incoming().createdAt <= request.time &&
+                       isValidAiJob(incoming());
+      allow update: if isSignedIn() &&
+                       existing().userId == request.auth.uid &&
+                       incoming().userId == existing().userId &&
+                       incoming().createdAt == existing().createdAt &&
+                       isValidAiJob(incoming());
+      allow delete: if isSignedIn() && existing().userId == request.auth.uid;
+    }
+  }
+}
